@@ -8,6 +8,9 @@ headers = {
     "Content-Type": "application/json",
 }
 
+conversation_history = []
+
+
 # data = {
 #    "model": "mistral",
 #   "stream": False,
@@ -16,10 +19,13 @@ headers = {
 
 
 def generate_response(prompt):
+    conversation_history.append(prompt)
+    full_prompt = "\n".join(conversation_history)
+
     data = {
         "model": "mistral",
         "stream": False,
-        "prompt": prompt,
+        "prompt": full_prompt,
     }
 
     response = requests.post(url, data=json.dumps(data), headers=headers)
@@ -28,6 +34,7 @@ def generate_response(prompt):
         response_text = response.text
         data = json.loads(response_text)
         actual_response = data["response"]
+        conversation_history.append(actual_response)
         return actual_response
     else:
         print("Request failed with status code:", response.status_code, response.text)
@@ -36,7 +43,7 @@ def generate_response(prompt):
 
 iface = gr.Interface(
     fn=generate_response,
-    inputs=gr.inputs.Textbox(lines=2, placeholder="Enter your prompt here..."),
+    inputs=gr.components.Textbox(lines=2, placeholder="Enter your prompt here..."),
     outputs="text",
 )
 
